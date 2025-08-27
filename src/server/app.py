@@ -58,6 +58,21 @@ app = FastAPI(
     version="0.1.0",
 )
 
+@app.get("/")
+async def root():
+    """Root endpoint for testing"""
+    return {
+        "message": "DeerFlow API is running!",
+        "version": "0.1.0",
+        "status": "healthy",
+        "endpoints": {
+            "health": "/health",
+            "root": "/",
+            "chat": "/api/chat/stream",
+            "docs": "/docs"
+        }
+    }
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint for Railway deployment"""
@@ -75,6 +90,14 @@ async def health_check():
             "error": str(e),
             "service": "DeerFlow API"
         }
+
+@app.get("/test")
+async def test_endpoint():
+    """Simple test endpoint"""
+    return {
+        "message": "Test endpoint working!",
+        "timestamp": "2025-08-27"
+    }
 
 # Add CORS middleware
 # It's recommended to load the allowed origins from an environment variable
