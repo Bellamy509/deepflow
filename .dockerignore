@@ -1,6 +1,16 @@
+# Environment and config files
 .env
-Dockerfile
+.env.*
+conf.yaml
+conf.yaml.backup
+conf.yaml.example
+
+# Docker files
+Dockerfile*
 .dockerignore
+docker-compose.yml
+
+# Git files
 .git
 .gitignore
 
@@ -27,8 +37,10 @@ wheels/
 .installed.cfg
 *.egg
 .venv/
+venv/
 
-# Web
+# Web UI (not needed for backend)
+web/
 node_modules
 npm-debug.log
 .next
@@ -43,11 +55,26 @@ npm-debug.log
 .DS_Store
 Thumbs.db
 
-# Project specific
-conf.yaml
-web/
+# Documentation and examples
 docs/
 examples/
 assets/
 tests/
 *.log
+*.md
+!README.md
+
+# Railway files
+railway.json
+railway.toml
+Procfile
+.railwayignore
+RAILWAY_DEPLOYMENT.md
+
+# Development files
+bootstrap.sh
+bootstrap.bat
+Makefile
+pre-commit
+test_*.py
+*.pyc
