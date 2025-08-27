@@ -1,23 +1,32 @@
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm
+# Use Python 3.12 slim image as base
+FROM python:3.12-slim
 
-# Install uv.
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set work directory
 WORKDIR /app
 
-# Copy dependency files first for better caching
-COPY pyproject.toml uv.lock ./
+# Copy requirements (we'll create this from pyproject.toml)
+COPY requirements.txt ./
 
-# Install dependencies
-RUN uv sync --locked --no-install-project
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application into the container.
-COPY . /app
+# Copy application code
+COPY . .
 
-# Install the application dependencies.
-RUN uv sync --locked
-
+# Expose port
 EXPOSE 8000
 
-# Run the application.
-CMD ["uv", "run", "python", "server.py", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application
+CMD ["python", "server.py", "--host", "0.0.0.0", "--port", "8000"]
