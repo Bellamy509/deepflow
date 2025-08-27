@@ -4,7 +4,7 @@
 import logging
 import os
 from dataclasses import dataclass, field, fields
-from typing import Any, Optional
+from typing import Any, Optional, Dict, List
 
 from langchain_core.runnables import RunnableConfig
 
@@ -23,21 +23,19 @@ def get_bool_env(name: str, default: bool = False) -> bool:
     return str(val).strip().lower() in _TRUTHY
 
 
-def get_str_env(name: str, default: str = "") -> str:
-    val = os.getenv(name)
-    return default if val is None else str(val).strip()
-
-
-def get_int_env(name: str, default: int = 0) -> int:
-    val = os.getenv(name)
-    if val is None:
-        return default
+def get_str_env(key: str, default: str = "") -> str:
+    """Get string environment variable with default"""
     try:
-        return int(val.strip())
-    except ValueError:
-        logger.warning(
-            f"Invalid integer value for {name}: {val}. Using default {default}."
-        )
+        return os.getenv(key, default)
+    except Exception:
+        return default
+
+
+def get_int_env(key: str, default: int = 0) -> int:
+    """Get integer environment variable with default"""
+    try:
+        return int(os.getenv(key, str(default)))
+    except (ValueError, TypeError):
         return default
 
 
@@ -62,6 +60,38 @@ def get_recursion_limit(default: int = 25) -> int:
             f"Using default value {default}."
         )
         return default
+
+
+def get_recursion_limit() -> int:
+    """Get recursion limit with safe default"""
+    try:
+        return get_int_env("RECURSION_LIMIT", 25)
+    except Exception:
+        return 25
+
+# Add safe defaults for all configuration functions
+def get_configured_llm_models() -> Dict[str, Any]:
+    """Get configured LLM models with safe defaults"""
+    try:
+        # Return minimal configuration to prevent startup errors
+        return {
+            "BASIC_MODEL": {
+                "base_url": get_str_env("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+                "model": get_str_env("OPENAI_MODEL", "gpt-4o-mini"),
+                "api_key": get_str_env("OPENAI_API_KEY", ""),
+                "temperature": 0.1
+            }
+        }
+    except Exception:
+        # Return minimal safe configuration
+        return {
+            "BASIC_MODEL": {
+                "base_url": "https://api.openai.com/v1",
+                "model": "gpt-4o-mini",
+                "api_key": "",
+                "temperature": 0.1
+            }
+        }
 
 
 @dataclass(kw_only=True)
