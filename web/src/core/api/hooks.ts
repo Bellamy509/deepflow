@@ -56,7 +56,7 @@ export function useConfig(): {
       setLoading(false);
       return;
     }
-    fetch(resolveServiceURL("./config"))
+    fetch(resolveServiceURL("config"))
       .then((res) => res.json())
       .then((config) => {
         setConfig(config);
