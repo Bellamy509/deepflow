@@ -1,0 +1,64 @@
+# Development files
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Tests
+tests/
+test_*.py
+*_test.py
+
+# Development scripts
+bootstrap.sh
+bootstrap.bat
+Makefile
+pre-commit
+
+# Local configuration
+.env.example
+conf.yaml.example
+conf.yaml.backup
+
+# Web UI (deployed separately if needed)
+web/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/

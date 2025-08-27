@@ -58,6 +58,11 @@ app = FastAPI(
     version="0.1.0",
 )
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Railway deployment"""
+    return {"status": "healthy", "service": "DeerFlow API"}
+
 # Add CORS middleware
 # It's recommended to load the allowed origins from an environment variable
 # for better security and flexibility across different environments.
