@@ -257,6 +257,48 @@ async def chat_endpoint():
             .mode-icon {
                 margin-right: 8px;
             }
+            .chat-section {
+                width: 100%;
+                max-width: 800px;
+                margin-bottom: 30px;
+                display: none; /* Caché par défaut */
+            }
+            
+            .chat-section.active {
+                display: block; /* Affiché quand il y a des messages */
+            }
+            
+            .chat-messages {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 20px;
+                max-height: 400px;
+                overflow-y: auto;
+                margin-bottom: 20px;
+            }
+            
+            .message {
+                margin-bottom: 15px;
+                padding: 15px;
+                border-radius: 12px;
+                max-width: 80%;
+                word-wrap: break-word;
+            }
+            
+            .user-message {
+                background: rgba(100, 126, 234, 0.3);
+                border: 1px solid rgba(100, 126, 234, 0.5);
+                margin-left: auto;
+                text-align: right;
+            }
+            
+            .bot-message {
+                background: rgba(118, 75, 162, 0.3);
+                border: 1px solid rgba(118, 75, 162, 0.5);
+                margin-right: auto;
+            }
+            
             .footer {
                 position: fixed;
                 bottom: 20px;
@@ -307,6 +349,12 @@ async def chat_endpoint():
                 </div>
             </div>
 
+            <div class="chat-section">
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Les messages de chat apparaîtront ici -->
+                </div>
+            </div>
+
             <div class="input-section">
                 <div class="input-container">
                     <input type="text" class="chat-input" placeholder="What can I do for you?" />
@@ -347,13 +395,80 @@ async def chat_endpoint():
 
             // Gestion de l'envoi
             document.querySelector('.send-button').addEventListener('click', function() {
-                const input = document.querySelector('.chat-input');
-                if (input.value.trim()) {
-                    // Ici vous pouvez ajouter la logique d'envoi
-                    console.log('Message envoyé:', input.value);
-                    input.value = '';
-                }
+                sendMessage();
             });
+
+            async function sendMessage() {
+                const input = document.querySelector('.chat-input');
+                const message = input.value.trim();
+                
+                if (!message) return;
+
+                // Afficher la zone de chat
+                document.querySelector('.chat-section').classList.add('active');
+                
+                // Créer le message utilisateur
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user-message';
+                userMessage.textContent = message;
+                document.querySelector('.chat-messages').appendChild(userMessage);
+
+                // Vider l'input
+                input.value = '';
+
+                // Créer le message bot (vide pour l'instant)
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot-message';
+                botMessage.textContent = '🔄 DeerFlow réfléchit...';
+                document.querySelector('.chat-messages').appendChild(botMessage);
+
+                // Scroll vers le bas
+                document.querySelector('.chat-messages').scrollTop = document.querySelector('.chat-messages').scrollHeight;
+
+                try {
+                    // Appeler l'API de chat
+                    const response = await fetch('/api/chat/stream', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: message })
+                    });
+
+                    if (response.ok) {
+                        const reader = response.body.getReader();
+                        let botResponse = '';
+
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+
+                            const chunk = new TextDecoder().decode(value);
+                            const lines = chunk.split('\n');
+
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    try {
+                                        const data = JSON.parse(line.slice(6));
+                                        if (data.content) {
+                                            botResponse += data.content;
+                                            // Mettre à jour le message en temps réel
+                                            botMessage.textContent = botResponse;
+                                            document.querySelector('.chat-messages').scrollTop = document.querySelector('.chat-messages').scrollHeight;
+                                        }
+                                    } catch (e) {
+                                        // Ignorer les erreurs de parsing
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        botMessage.textContent = '❌ Erreur: Impossible de communiquer avec l\'API';
+                    }
+                } catch (error) {
+                    botMessage.textContent = '❌ Erreur de connexion: ' + error.message;
+                }
+            }
 
             // Envoi avec Entrée
             document.querySelector('.chat-input').addEventListener('keypress', function(e) {
