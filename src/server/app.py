@@ -151,9 +151,13 @@ async def chat_endpoint():
             .button:hover {
                 transform: translateY(-2px);
             }
-            .auto-redirect {
+            .info-note {
                 margin-top: 20px;
-                opacity: 0.8;
+                padding: 15px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                border-left: 4px solid #667eea;
+                opacity: 0.9;
                 font-size: 0.9em;
             }
         </style>
@@ -180,26 +184,10 @@ async def chat_endpoint():
                 </a>
             </div>
             
-            <div class="auto-redirect">
-                <p>Redirection automatique dans <span id="countdown">5</span> secondes...</p>
+            <div class="info-note">
+                <p>💡 Utilisez les boutons ci-dessus pour accéder à l'interface DeerFlow</p>
             </div>
         </div>
-
-        <script>
-            // Compte à rebours et redirection automatique
-            let countdown = 5;
-            const countdownElement = document.getElementById('countdown');
-            
-            const timer = setInterval(() => {
-                countdown--;
-                countdownElement.textContent = countdown;
-                
-                if (countdown <= 0) {
-                    clearInterval(timer);
-                    window.location.href = 'http://localhost:3000';
-                }
-            }, 1000);
-        </script>
     </body>
     </html>
     """
