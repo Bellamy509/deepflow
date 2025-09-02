@@ -24,23 +24,33 @@ export const Link = ({
     (toolCalls || []).forEach((call) => {
       if (call && call.name === "web_search" && call.result) {
         try {
+          // Utiliser parseJSON avec une valeur de fallback sûre
           const result = parseJSON(call.result, []) as Array<{ url: string }>;
+          
           if (Array.isArray(result)) {
             result.forEach((r) => {
-              if (r && typeof r.url === 'string') {
-                // encodeURI is used to handle the case where the link contains chinese or other special characters
-                links.add(encodeURI(r.url));
-                links.add(r.url);
+              if (r && typeof r.url === 'string' && r.url.trim()) {
+                try {
+                  // encodeURI est utilisé pour gérer les caractères spéciaux
+                  links.add(encodeURI(r.url));
+                  links.add(r.url);
+                } catch (encodeError) {
+                  console.warn('Failed to encode URL:', r.url, encodeError);
+                }
               }
             });
           }
         } catch (error) {
-          console.warn('Failed to parse web_search result:', error);
+          console.warn('Failed to process web_search result:', {
+            callId: call.id,
+            result: call.result?.substring(0, 100) + (call.result && call.result.length > 100 ? '...' : ''),
+            error: error instanceof Error ? error.message : String(error)
+          });
         }
       }
     });
     return links;
-  }, [toolCalls]);
+  }, [toolCalls, checkLinkCredibility]);
 
   const isCredible = useMemo(() => {
     return checkLinkCredibility && href && !responding

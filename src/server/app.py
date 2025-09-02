@@ -68,7 +68,8 @@ async def root():
         "endpoints": {
             "health": "/health",
             "root": "/",
-            "chat": "/api/chat/stream",
+            "chat": "/chat",
+            "chat_api": "/api/chat/stream",
             "docs": "/docs"
         }
     }
@@ -97,6 +98,30 @@ async def test_endpoint():
     return {
         "message": "Test endpoint working!",
         "timestamp": "2025-08-27"
+    }
+
+@app.get("/chat")
+async def chat_endpoint():
+    """Chat interface endpoint"""
+    return {
+        "message": "DeerFlow Chat Interface",
+        "description": "Interface de chat DeerFlow",
+        "endpoints": {
+            "chat_api": "/api/chat/stream",
+            "chat_interface": "/chat",
+            "documentation": "/docs"
+        },
+        "usage": {
+            "method": "POST",
+            "endpoint": "/api/chat/stream",
+            "body": {"message": "Votre message ici"},
+            "headers": {"Content-Type": "application/json"}
+        },
+        "example": {
+            "curl": "curl -X POST -H 'Content-Type: application/json' -d '{\"message\": \"Bonjour\"}' https://deepflow-production.up.railway.app/api/chat/stream"
+        },
+        "status": "active",
+        "version": "0.1.0"
     }
 
 # Add CORS middleware
