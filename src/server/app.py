@@ -60,20 +60,11 @@ app = FastAPI(
 
 @app.get("/")
 async def root():
-    """Root endpoint for testing"""
-    return {
-        "message": "DeerFlow API is running!",
-        "version": "0.1.0",
-        "status": "healthy",
-        "endpoints": {
-            "health": "/health",
-            "root": "/",
-            "chat": "/chat (redirects to web interface)",
-            "chat_api": "/api/chat/stream",
-            "chat_json": "/chat-json",
-            "docs": "/docs"
-        }
-    }
+    """Root endpoint - redirects to chat interface"""
+    from fastapi.responses import RedirectResponse
+    
+    # Rediriger vers l'interface de chat DeerFlow
+    return RedirectResponse(url="/chat", status_code=302)
 
 @app.get("/health")
 async def health_check():
@@ -103,11 +94,297 @@ async def test_endpoint():
 
 @app.get("/chat")
 async def chat_endpoint():
-    """Chat interface endpoint - redirects to web interface"""
-    from fastapi.responses import RedirectResponse
+    """Chat interface endpoint - serves DeerFlow web interface"""
+    from fastapi.responses import HTMLResponse
     
-    # Rediriger vers l'interface web DeerFlow
-    return RedirectResponse(url="/", status_code=302)
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>🦌 DeerFlow - Assistant de Recherche IA</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: #000000;
+                color: white;
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
+            }
+            .header {
+                background: rgba(255, 255, 255, 0.05);
+                padding: 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .logo {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 24px;
+                font-weight: bold;
+            }
+            .header-icons {
+                display: flex;
+                gap: 15px;
+            }
+            .icon {
+                width: 24px;
+                height: 24px;
+                opacity: 0.8;
+                cursor: pointer;
+            }
+            .main-content {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: calc(100vh - 100px);
+                text-align: center;
+                padding: 40px 20px;
+            }
+            .welcome {
+                margin-bottom: 40px;
+            }
+            .welcome h1 {
+                font-size: 3em;
+                margin-bottom: 20px;
+                background: linear-gradient(45deg, #667eea, #764ba2);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+            .welcome p {
+                font-size: 1.2em;
+                opacity: 0.9;
+                max-width: 600px;
+                line-height: 1.6;
+            }
+            .suggestions {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+                max-width: 800px;
+                margin-bottom: 40px;
+            }
+            .suggestion {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 20px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-align: left;
+            }
+            .suggestion:hover {
+                background: rgba(255, 255, 255, 0.1);
+                transform: translateY(-2px);
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+            .input-section {
+                width: 100%;
+                max-width: 600px;
+                margin-bottom: 40px;
+            }
+            .input-container {
+                position: relative;
+                margin-bottom: 20px;
+            }
+            .chat-input {
+                width: 100%;
+                padding: 20px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                color: white;
+                font-size: 16px;
+                outline: none;
+                transition: border-color 0.3s ease;
+            }
+            .chat-input:focus {
+                border-color: #667eea;
+            }
+            .chat-input::placeholder {
+                color: rgba(255, 255, 255, 0.5);
+            }
+            .send-button {
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: linear-gradient(45deg, #667eea, #764ba2);
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                color: white;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: transform 0.2s ease;
+            }
+            .send-button:hover {
+                transform: translateY(-50%) scale(1.1);
+            }
+            .mode-buttons {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+            }
+            .mode-button {
+                padding: 10px 20px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.05);
+                color: white;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+            }
+            .mode-button.active {
+                background: #667eea;
+                border-color: #667eea;
+            }
+            .mode-button:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+            .mode-icon {
+                margin-right: 8px;
+            }
+            .footer {
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="logo">
+                🦌 DeerFlow
+            </div>
+            <div class="header-icons">
+                <div class="icon">📁</div>
+                <div class="icon">🌙</div>
+                <div class="icon">⚙️</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="welcome">
+                <h1>👋 Hello, there!</h1>
+                <p>Welcome to 🦌 DeerFlow, a deep research assistant built on cutting-edge language models, helps you search on web, browse information, and handle complex tasks.</p>
+            </div>
+
+            <div class="suggestions">
+                <div class="suggestion">
+                    How many times taller is the Eiffel Tower than the tallest building in the world?
+                </div>
+                <div class="suggestion">
+                    How many years does an average Tesla battery last compared to a gasoline engine?
+                </div>
+                <div class="suggestion">
+                    How many liters of water are required to produce 1 kg of beef?
+                </div>
+                <div class="suggestion">
+                    How many times faster is the speed of light compared to the speed of sound?
+                </div>
+            </div>
+
+            <div class="input-section">
+                <div class="input-container">
+                    <input type="text" class="chat-input" placeholder="What can I do for you?" />
+                    <button class="send-button">↑</button>
+                </div>
+                
+                <div class="mode-buttons">
+                    <div class="mode-button active">
+                        <span class="mode-icon">🎩</span>
+                        Investigation
+                    </div>
+                    <div class="mode-button">
+                        <span class="mode-icon">🎓</span>
+                        Academic
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">N</div>
+
+        <script>
+            // Gestion des suggestions
+            document.querySelectorAll('.suggestion').forEach(suggestion => {
+                suggestion.addEventListener('click', function() {
+                    document.querySelector('.chat-input').value = this.textContent;
+                    document.querySelector('.chat-input').focus();
+                });
+            });
+
+            // Gestion des modes
+            document.querySelectorAll('.mode-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.mode-button').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Gestion de l'envoi
+            document.querySelector('.send-button').addEventListener('click', function() {
+                const input = document.querySelector('.chat-input');
+                if (input.value.trim()) {
+                    // Ici vous pouvez ajouter la logique d'envoi
+                    console.log('Message envoyé:', input.value);
+                    input.value = '';
+                }
+            });
+
+            // Envoi avec Entrée
+            document.querySelector('.chat-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.querySelector('.send-button').click();
+                }
+            });
+        </script>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html_content)
+
+@app.get("/api-info")
+async def api_info():
+    """API information endpoint"""
+    return {
+        "message": "DeerFlow API is running!",
+        "version": "0.1.0",
+        "status": "healthy",
+        "endpoints": {
+            "health": "/health",
+            "root": "/ (redirects to chat interface)",
+            "chat": "/chat (DeerFlow web interface)",
+            "chat_api": "/api/chat/stream",
+            "chat_json": "/chat-json",
+            "api_info": "/api-info",
+            "docs": "/docs"
+        }
+    }
 
 @app.get("/chat-json")
 async def chat_json_endpoint():
