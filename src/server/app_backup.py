@@ -94,7 +94,7 @@ async def test_endpoint():
 
 @app.get("/chat")
 async def chat_endpoint():
-    """Chat interface endpoint - redirects to real DeerFlow interface"""
+    """Chat interface endpoint - serves DeerFlow web interface"""
     from fastapi.responses import HTMLResponse
     
     html_content = """
@@ -103,7 +103,7 @@ async def chat_endpoint():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>🦌 DeerFlow - Redirection vers l'interface</title>
+        <title>🦌 DeerFlow - Assistant de Recherche IA</title>
         <style>
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -112,93 +112,370 @@ async def chat_endpoint():
                 margin: 0;
                 padding: 0;
                 min-height: 100vh;
+            }
+            .header {
+                background: rgba(255, 255, 255, 0.05);
+                padding: 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 display: flex;
-                justify-content: center;
+                justify-content: space-between;
                 align-items: center;
             }
-            .container {
-                text-align: center;
-                background: rgba(255, 255, 255, 0.05);
-                padding: 40px;
-                border-radius: 20px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                max-width: 500px;
-            }
             .logo {
-                font-size: 4em;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 24px;
+                font-weight: bold;
+            }
+            .header-icons {
+                display: flex;
+                gap: 15px;
+            }
+            .icon {
+                width: 24px;
+                height: 24px;
+                opacity: 0.8;
+                cursor: pointer;
+            }
+            .main-content {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: calc(100vh - 100px);
+                text-align: center;
+                padding: 40px 20px;
+            }
+            .welcome {
+                margin-bottom: 40px;
+            }
+            .welcome h1 {
+                font-size: 3em;
                 margin-bottom: 20px;
-            }
-            h1 {
-                color: #667eea;
-                margin-bottom: 20px;
-            }
-            .info {
-                background: rgba(255, 255, 255, 0.1);
-                padding: 20px;
-                border-radius: 10px;
-                margin: 20px 0;
-            }
-            .button {
-                display: inline-block;
                 background: linear-gradient(45deg, #667eea, #764ba2);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+            .welcome p {
+                font-size: 1.2em;
+                opacity: 0.9;
+                max-width: 600px;
+                line-height: 1.6;
+            }
+            .suggestions {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+                max-width: 800px;
+                margin-bottom: 40px;
+            }
+            .suggestion {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 20px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-align: left;
+            }
+            .suggestion:hover {
+                background: rgba(255, 255, 255, 0.1);
+                transform: translateY(-2px);
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+            .input-section {
+                width: 100%;
+                max-width: 600px;
+                margin-bottom: 40px;
+            }
+            .input-container {
+                position: relative;
+                margin-bottom: 20px;
+            }
+            .chat-input {
+                width: 100%;
+                padding: 20px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
                 color: white;
-                padding: 15px 30px;
-                text-decoration: none;
-                border-radius: 10px;
-                margin: 10px;
+                font-size: 16px;
+                outline: none;
+                transition: border-color 0.3s ease;
+            }
+            .chat-input:focus {
+                border-color: #667eea;
+            }
+            .chat-input::placeholder {
+                color: rgba(255, 255, 255, 0.5);
+            }
+            .send-button {
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: linear-gradient(45deg, #667eea, #764ba2);
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                color: white;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 transition: transform 0.2s ease;
             }
-            .button:hover {
-                transform: translateY(-2px);
+            .send-button:hover {
+                transform: translateY(-50%) scale(1.1);
             }
-            .auto-redirect {
-                margin-top: 20px;
-                opacity: 0.8;
-                font-size: 0.9em;
+            .mode-buttons {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+            }
+            .mode-button {
+                padding: 10px 20px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.05);
+                color: white;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+            }
+            .mode-button.active {
+                background: #667eea;
+                border-color: #667eea;
+            }
+            .mode-button:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+            .mode-icon {
+                margin-right: 8px;
+            }
+            .chat-section {
+                width: 100%;
+                max-width: 800px;
+                margin-bottom: 30px;
+                display: none; /* Caché par défaut */
+            }
+            
+            .chat-section.active {
+                display: block; /* Affiché quand il y a des messages */
+            }
+            
+            .chat-messages {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 20px;
+                max-height: 400px;
+                overflow-y: auto;
+                margin-bottom: 20px;
+            }
+            
+            .message {
+                margin-bottom: 15px;
+                padding: 15px;
+                border-radius: 12px;
+                max-width: 80%;
+                word-wrap: break-word;
+            }
+            
+            .user-message {
+                background: rgba(100, 126, 234, 0.3);
+                border: 1px solid rgba(100, 126, 234, 0.5);
+                margin-left: auto;
+                text-align: right;
+            }
+            
+            .bot-message {
+                background: rgba(118, 75, 162, 0.3);
+                border: 1px solid rgba(118, 75, 162, 0.5);
+                margin-right: auto;
+            }
+            
+            .footer {
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
             }
         </style>
     </head>
     <body>
-        <div class="container">
-            <div class="logo">🦌</div>
-            <h1>DeerFlow</h1>
-            <p>Redirection vers l'interface DeerFlow...</p>
-            
-            <div class="info">
-                <h3>Interface Locale</h3>
-                <p>L'interface DeerFlow est disponible sur :</p>
-                <p><strong>http://localhost:3000</strong></p>
-                <p>Démarrez l'interface avec : <code>cd web && pnpm dev</code></p>
+        <div class="header">
+            <div class="logo">
+                🦌 DeerFlow
             </div>
-            
-            <div>
-                <a href="http://localhost:3000" class="button" target="_blank">
-                    🚀 Ouvrir l'Interface DeerFlow
-                </a>
-                <a href="/api-info" class="button">
-                    📄 Informations API
-                </a>
-            </div>
-            
-            <div class="auto-redirect">
-                <p>Redirection automatique dans <span id="countdown">5</span> secondes...</p>
+            <div class="header-icons">
+                <div class="icon">📁</div>
+                <div class="icon">🌙</div>
+                <div class="icon">⚙️</div>
             </div>
         </div>
 
-        <script>
-            // Compte à rebours et redirection automatique
-            let countdown = 5;
-            const countdownElement = document.getElementById('countdown');
-            
-            const timer = setInterval(() => {
-                countdown--;
-                countdownElement.textContent = countdown;
+        <div class="main-content">
+            <div class="welcome">
+                <h1>👋 Hello, there!</h1>
+                <p>Welcome to 🦌 DeerFlow, a deep research assistant built on cutting-edge language models, helps you search on web, browse information, and handle complex tasks.</p>
+            </div>
+
+            <div class="suggestions">
+                <div class="suggestion">
+                    How many times taller is the Eiffel Tower than the tallest building in the world?
+                </div>
+                <div class="suggestion">
+                    How many years does an average Tesla battery last compared to a gasoline engine?
+                </div>
+                <div class="suggestion">
+                    How many liters of water are required to produce 1 kg of beef?
+                </div>
+                <div class="suggestion">
+                    How many times faster is the speed of light compared to the speed of sound?
+                </div>
+            </div>
+
+            <div class="chat-section">
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Les messages de chat apparaîtront ici -->
+                </div>
+            </div>
+
+            <div class="input-section">
+                <div class="input-container">
+                    <input type="text" class="chat-input" placeholder="What can I do for you?" />
+                    <button class="send-button">↑</button>
+                </div>
                 
-                if (countdown <= 0) {
-                    clearInterval(timer);
-                    window.location.href = 'http://localhost:3000';
+                <div class="mode-buttons">
+                    <div class="mode-button active">
+                        <span class="mode-icon">🎩</span>
+                        Investigation
+                    </div>
+                    <div class="mode-button">
+                        <span class="mode-icon">🎓</span>
+                        Academic
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">N</div>
+
+        <script>
+            // Gestion des suggestions
+            document.querySelectorAll('.suggestion').forEach(suggestion => {
+                suggestion.addEventListener('click', function() {
+                    document.querySelector('.chat-input').value = this.textContent;
+                    document.querySelector('.chat-input').focus();
+                });
+            });
+
+            // Gestion des modes
+            document.querySelectorAll('.mode-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.mode-button').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Gestion de l'envoi
+            document.querySelector('.send-button').addEventListener('click', function() {
+                sendMessage();
+            });
+
+            async function sendMessage() {
+                const input = document.querySelector('.chat-input');
+                const message = input.value.trim();
+                
+                if (!message) return;
+
+                // Afficher la zone de chat
+                document.querySelector('.chat-section').classList.add('active');
+                
+                // Créer le message utilisateur
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user-message';
+                userMessage.textContent = message;
+                document.querySelector('.chat-messages').appendChild(userMessage);
+
+                // Vider l'input
+                input.value = '';
+
+                // Créer le message bot (vide pour l'instant)
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot-message';
+                botMessage.textContent = '🔄 DeerFlow réfléchit...';
+                document.querySelector('.chat-messages').appendChild(botMessage);
+
+                // Scroll vers le bas
+                document.querySelector('.chat-messages').scrollTop = document.querySelector('.chat-messages').scrollHeight;
+
+                try {
+                    // Appeler l'API de chat
+                    const response = await fetch('/api/chat/stream', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: message })
+                    });
+
+                    if (response.ok) {
+                        const reader = response.body.getReader();
+                        let botResponse = '';
+
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+
+                            const chunk = new TextDecoder().decode(value);
+                            const lines = chunk.split('\n');
+
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    try {
+                                        const data = JSON.parse(line.slice(6));
+                                        if (data.content) {
+                                            botResponse += data.content;
+                                            // Mettre à jour le message en temps réel
+                                            botMessage.textContent = botResponse;
+                                            document.querySelector('.chat-messages').scrollTop = document.querySelector('.chat-messages').scrollHeight;
+                                        }
+                                    } catch (e) {
+                                        // Ignorer les erreurs de parsing
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        botMessage.textContent = '❌ Erreur: Impossible de communiquer avec l\'API';
+                    }
+                } catch (error) {
+                    botMessage.textContent = '❌ Erreur de connexion: ' + error.message;
                 }
-            }, 1000);
+            }
+
+            // Envoi avec Entrée
+            document.querySelector('.chat-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.querySelector('.send-button').click();
+                }
+            });
         </script>
     </body>
     </html>
